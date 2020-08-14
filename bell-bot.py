@@ -1,18 +1,32 @@
 import discord
 from discord.ext import commands
 import datetime
-import secrets # Contains CLIENT_SECRET and other secret variables, it's in a .gitignore so that no one can steal my OAuth2
+from ruamel.yaml import YAML
 
-client = commands.Bot(command_prefix="BellBot ", case_insensitive=True)
+yaml = YAML()
 
-client.embed_color = discord.Color.orange()
+with open("./config.yml", "r", encoding="utf-8") as file:
+  config = yaml.load(file)
+
+client = commands.Bot(command_prefix=config['Prefix'], case_insensitive=True)
+
+log_channel_id = config['Log Channel ID']
+
+client.embed_color = discord.Color.from_rgb(
+  config['Embed Settings']['Color']['r'],
+  config['Embed Settings']['Color']['g'],
+  config['Embed Settings']['Color']['b']
+)
+
+client.prefix = config['Prefix']
+client.playing_status = config['Playing Status']
 
 
 @client.event
 async def on_ready():
-  print(f"Logged in as '{client.user}' in channel '{secrets.DISCORD_CHANNEL}'")
+  print(f"Logged in as '{client.user}', putting logs in channel '{log_channel_id}'")
   
-  game = discord.Game(name="with some bells")
+  game = discord.Game(name=client.playing_status)
   await client.change_presence(activity=game)
   
   embed = discord.Embed(
@@ -24,7 +38,7 @@ async def on_ready():
     text = f"{client.user.name} has successfully booted up"
   )
   
-  client.channel = client.get_channel(secrets.DISCORD_CHANNEL)
+  client.channel = client.get_channel(log_channel_id)
   await client.channel.send(embed = embed)
 
 @client.command(name = "restart", aliases = ["rs","you-stupid"], help = "Restarts the bot")
@@ -49,4 +63,8 @@ async def restart(ctx):
   
   await client.close()
 
-client.run(secrets.CLIENT_SECRET, bot=True, reconnect=True)
+from importlib import import_module
+token_module = import_module(config['Bot Token File'][:-3])
+token = getattr(token_module, config['Bot Token Variable Name'])
+
+client.run(token, bot=True, reconnect=True)

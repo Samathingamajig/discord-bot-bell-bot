@@ -1,0 +1,22 @@
+# The name of bot token
+Bot Token Variable Name: CLIENT_SECRET
+# What file the bot token is in [be sure to include the ".py"]
+Bot Token File: secrets.py
+
+Prefix: "BellBot "
+
+# The "Playing ____" status of the bot
+Playing Status: with some bells
+
+# The channel ID where you want logs to go
+Log Channel ID: 743657230762770485
+# The channel ID where you want announcements to go
+Announcements Channel ID: 743667094868197478
+
+# The settings for embeds
+Embed Settings:
+  # The Red/Green/Blue of the embed color
+  Color:
+    r: 230
+    g: 126
+    b: 34
