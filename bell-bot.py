@@ -3,8 +3,20 @@ from discord.ext import commands
 import datetime
 import pytz
 from ruamel.yaml import YAML
+import threading
 
 yaml = YAML()
+
+class ThreadJob(threading.Thread):
+  def __init__(self,callback,event,interval):
+    self.callback = callback
+    self.event = event
+    self.interval = interval
+    super(ThreadJob,self).__init__()
+  
+  def run(self):
+    while not self.event.wait(self.interval):
+      self.callback()
 
 with open("./config.yml", "r", encoding="utf-8") as file:
   config = yaml.load(file)
@@ -55,6 +67,7 @@ async def on_ready():
   await client.channel.send(embed = embed)
 
 @client.command(name = "restart", aliases = ["rs","you-stupid"], help = "Restarts the bot")
+@commands.has_permissions(administrator=True)
 async def restart(ctx):
   print(f"Restart command requested by {ctx.author} in channel #{ctx.channel}")
   embed = discord.Embed(
