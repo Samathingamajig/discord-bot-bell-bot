@@ -3,6 +3,7 @@ Bot Token Variable Name: CLIENT_SECRET
 # What file the bot token is in [be sure to include the ".py"]
 Bot Token File: secrets.py
 
+# The prefix for commands
 Prefix: "BellBot "
 
 # The "Playing ____" status of the bot
@@ -20,3 +21,9 @@ Embed Settings:
     r: 230
     g: 126
     b: 34
+
+# The timezone that the users of the bot will be using
+User Timezone: US/Central
+
+# The yaml file of the block schedule
+Block Calendar File: 'block-schedule.yml'
