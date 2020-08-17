@@ -13,6 +13,11 @@ Playing Status: with some bells
 Log Channel ID: 743657230762770485
 # The channel ID where you want announcements to go
 Announcements Channel ID: 743667094868197478
+# The role ID of who you want to ping
+Pinged Role ID: 743675218425544754
+
+# The start of each message | "{pinged_role}" is the pinged role, which is required to be able to ping
+Message Starter: "🔔 {pinged_role} 🔔"
 
 # The settings for embeds
 Embed Settings:
@@ -26,4 +31,7 @@ Embed Settings:
 User Timezone: US/Central
 
 # The yaml file of the block schedule
-Block Calendar File: 'block-schedule.yml'
+Block Calendar File: 'wip/debug-block-schedule.yml'
+
+# The JSON file of the bell schedule
+Bell Schedule File: 'wip/debug-bell-schedule.json'

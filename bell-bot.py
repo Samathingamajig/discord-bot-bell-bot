@@ -4,6 +4,9 @@ import datetime
 import pytz
 from ruamel.yaml import YAML
 import threading
+import json
+import asyncio
+import time
 
 yaml = YAML()
 
@@ -16,7 +19,7 @@ class ThreadJob(threading.Thread):
   
   def run(self):
     while not self.event.wait(self.interval):
-      self.callback()
+      client.loop.create_task(self.callback())
 
 with open("./config.yml", "r", encoding="utf-8") as file:
   config = yaml.load(file)
@@ -24,7 +27,12 @@ with open("./config.yml", "r", encoding="utf-8") as file:
 with open(f"./{config['Block Calendar File']}", "r", encoding="utf-8") as file:
   block_schedule = yaml.load(file)
 
+with open(f"./{config['Bell Schedule File']}", "r", encoding="utf-8") as file:
+  bell_schedule = json.load(file)
+
 client = commands.Bot(command_prefix=config['Prefix'], case_insensitive=True)
+
+
 
 log_channel_id = config['Log Channel ID']
 
@@ -40,12 +48,10 @@ client.playing_status = config['Playing Status']
 utc = pytz.utc
 client.timezone = pytz.timezone(config["User Timezone"])
 
-# def get_my_time():
-#  utc_time = datetime.datetime.utcnow()
-#  utc_time = utc.localize(utc_time)
-#  my_time = utc_time.astimezone(my_timezone)
-#  return my_time
-
+client.previous_bell = None
+client.ping_channel = config['Announcements Channel ID']
+client.pinged_role = f"<@&{config['Pinged Role ID']}>"
+client.message_starter = config['Message Starter'].format(pinged_role = client.pinged_role)
 
 @client.event
 async def on_ready():
@@ -63,8 +69,8 @@ async def on_ready():
     text = f"{client.user.name} has successfully booted up"
   )
   
-  client.channel = client.get_channel(log_channel_id)
-  await client.channel.send(embed = embed)
+  client.log_channel = client.get_channel(log_channel_id)
+  await client.log_channel.send(embed = embed)
 
 @client.command(name = "restart", aliases = ["rs","you-stupid"], help = "Restarts the bot")
 @commands.has_permissions(administrator=True)
@@ -83,12 +89,14 @@ async def restart(ctx):
     text = f"Please wait a moment while we restart"
   )
   
-  await client.channel.send(embed = embed)
+  await client.log_channel.send(embed = embed)
   
   await ctx.message.add_reaction("✅")
   
   game = discord.Game(name="shutting down...")
   await client.change_presence(activity=game)
+  
+  event.set()
   
   await client.close()
 
@@ -136,6 +144,72 @@ def get_block_day(time = None):
     return block_schedule[time.month][time.day]
   except:
     return None
+
+def get_current_bell(time = None, block_day = None):
+  if type(time) != datetime.datetime:
+    time = get_local_datetime()
+  if block_day != "A" and block_day != "B":
+    block_day = get_block_day(time)
+  
+  current_bell = client.previous_bell
+  
+  if block_day:
+    for bell in bell_schedule:
+      if time.hour == bell['hour'] and time.minute == bell['minute']:
+        current_bell = bell
+        return current_bell
+  return client.previous_bell
+
+async def bell_ringer():
+  time = get_local_datetime()
+  block_day = get_block_day(time)
+  current_bell = get_current_bell(time, block_day)
+  
+  if current_bell == None:
+    # print("Current bell is none")
+    return
+    
+  period = current_bell['period']
+  if block_day == "B":
+    if type(current_bell['period']) == int:
+      period += 4
+  
+  if client.previous_bell == current_bell:
+    # print("Previous bell and Current bell are the same")
+    return
+  # elif client.previous_bell == None:
+    # print("Previous bell is none")
+  client.previous_bell = current_bell
+  if current_bell['message'] == "default":
+    if current_bell['type'] == "passing":
+      await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} starts in 5 minutes! Be sure to join your next zoom call!")
+    elif current_bell['type'] == "tardy":
+      await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} has now officially started! Make sure you're in your zoom call!")
+    elif current_bell['type'] == "starting":
+      await send_ping(f"""Good morning everyone! Schools starts in 5 minutes, so be sure to join your first zoom.
+
+Additional Info:
+Today is {time.month}/{time.day}/{time.year}
+It's a{'n' if block_day == 'A' else ''} {'🅰️' if block_day == 'A' else '🅱️'} day""")
+  else:
+    await send_ping(f"{current_bell['message']}")
+
+async def send_ping(message):
+  ping_channel = client.get_channel(client.ping_channel)
+  print(f"{client.message_starter} : {message}")
+  await ping_channel.send(f"{client.message_starter} : {message}")
+
+@client.command(name = "bob")
+async def bob(ctx):
+  # await client.log_channel.send(f"<@&{config['Pinged Role ID']}>")
+  await client.log_channel.send(':a: :b: :ab: :bell:')
+  time.sleep(5)
+  await client.log_channel.send(f"<@&{config['Pinged Role ID']}> :one:")
+
+event = threading.Event()
+
+bell_ringer_thread = ThreadJob(bell_ringer,event,5)
+bell_ringer_thread.start()
 
 from importlib import import_module
 token_module = import_module(config['Bot Token File'][:-3])
