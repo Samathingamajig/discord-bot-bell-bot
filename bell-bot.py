@@ -21,7 +21,7 @@ client = commands.Bot(command_prefix=config['Prefix'], case_insensitive=True)
 
 
 
-log_channel_id = config['Log Channel ID']
+client.log_channel = config['Log Channel ID']
 
 client.embed_color = discord.Color.from_rgb(
   config['Embed Settings']['Color']['r'],
@@ -42,7 +42,7 @@ client.message_starter = config['Message Starter'].format(pinged_role = client.p
 
 @client.event
 async def on_ready():
-  print(f"Logged in as '{client.user}', putting logs in channel '{log_channel_id}'")
+  print(f"Logged in as '{client.user}', {'putting logs in channel `{client.log_channel}`' if client.log_channel else 'not logging'}")
   
   game = discord.Game(name=client.playing_status)
   await client.change_presence(activity=game)
@@ -56,8 +56,9 @@ async def on_ready():
     text = f"{client.user.name} has successfully booted up"
   )
   
-  client.log_channel = client.get_channel(log_channel_id)
-  await client.log_channel.send(embed = embed)
+  if client.log_channel:
+    log_channel = client.get_channel(client.log_channel)
+    await log_channel.send(embed = embed)
 
 @client.command(name = "restart", aliases = ["rs","you-stupid"], help = "Restarts the bot")
 @commands.has_permissions(administrator=True)
@@ -76,7 +77,9 @@ async def restart(ctx):
     text = f"Please wait a moment while we restart"
   )
   
-  await client.log_channel.send(embed = embed)
+  if client.log_channel:
+    log_channel = client.get_channel(client.log_channel)
+    await log_channel.send(embed = embed)
   
   await ctx.message.add_reaction("✅")
   
@@ -85,7 +88,7 @@ async def restart(ctx):
   
   await client.close()
 
-@client.command(name = "block", aliases = ['ab', 'todays-block', 'a/b', 'aorbday', '🆎'], help = "Adds a reaction based on what day it is")
+@client.command(name = "block", aliases = ['ab', 'todays-block', 'a/b', 'aorbday', '🆎'], help = "Adds a reaction based on what day it is / what date is entered")
 async def a_or_b_day(ctx, *args):
   args = list(args)
   args_len = len(args)

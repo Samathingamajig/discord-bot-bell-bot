@@ -9,8 +9,8 @@ Prefix: "BellBot "
 # The "Playing ____" status of the bot
 Playing Status: with some bells
 
-# The channel ID where you want logs to go
-Log Channel ID: 743657230762770485
+# The channel ID where you want logs to go, leave blank to disable logging
+Log Channel ID: 
 # The channel ID where you want announcements to go
 Announcements Channel ID: 743667094868197478
 # The role ID of who you want to ping
