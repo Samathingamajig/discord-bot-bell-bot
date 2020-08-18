@@ -31,7 +31,7 @@ Embed Settings:
 User Timezone: US/Central
 
 # The yaml file of the block schedule
-Block Calendar File: 'wip/debug-block-schedule.yml'
+Block Calendar File: 'block-schedule.yml'
 
 # The JSON file of the bell schedule
-Bell Schedule File: 'wip/debug-bell-schedule.json'
+Bell Schedule File: 'bell-schedule.json'
