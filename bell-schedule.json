@@ -21,45 +21,10 @@
     "type": "passing"
   },
   {
-    "hour": 10,
-    "minute": 35,
-    "period": 2,
-    "message": "default",
-    "type": "tardy"
-  },
-  {
     "hour": 12,
     "minute": 5,
     "period": "lunch",
     "message": "dab on 'em haters, it's lunch time!",
     "type": ""
-  },
-  {
-    "hour": 12,
-    "minute": 30,
-    "period": 3,
-    "message": "default",
-    "type": "passing"
-  },
-  {
-    "hour": 12,
-    "minute": 35,
-    "period": 3,
-    "message": "default",
-    "type": "tardy"
-  },
-  {
-    "hour": 14,
-    "minute": 5,
-    "period": 4,
-    "message": "default",
-    "type": "passing"
-  },
-  {
-    "hour": 14,
-    "minute": 10,
-    "period": 4,
-    "message": "default",
-    "type": "tardy"
   }
 ]

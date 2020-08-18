@@ -12,9 +12,9 @@ Playing Status: with some bells
 # The channel ID where you want logs to go, leave blank to disable logging
 Log Channel ID: 
 # The channel ID where you want announcements to go
-Announcements Channel ID: 743667094868197478
+Announcements Channel ID: 
 # The role ID of who you want to ping
-Pinged Role ID: 743675218425544754
+Pinged Role ID: 
 
 # The start of each message | "{pinged_role}" is the pinged role, which is required to be able to ping
 Message Starter: "🔔 {pinged_role} 🔔"
@@ -28,7 +28,7 @@ Embed Settings:
     b: 34
 
 # The timezone that the users of the bot will be using
-User Timezone: US/Central
+User Timezone: 
 
 # The yaml file of the block schedule
 Block Calendar File: 'block-schedule.yml'
