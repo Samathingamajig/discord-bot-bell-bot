@@ -1,25 +1,12 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import datetime
 import pytz
 from ruamel.yaml import YAML
-import threading
 import json
-import asyncio
-import time
+from asyncio import sleep
 
 yaml = YAML()
-
-class ThreadJob(threading.Thread):
-  def __init__(self,callback,event,interval):
-    self.callback = callback
-    self.event = event
-    self.interval = interval
-    super(ThreadJob,self).__init__()
-  
-  def run(self):
-    while not self.event.wait(self.interval):
-      client.loop.create_task(self.callback())
 
 with open("./config.yml", "r", encoding="utf-8") as file:
   config = yaml.load(file)
@@ -96,8 +83,6 @@ async def restart(ctx):
   game = discord.Game(name="shutting down...")
   await client.change_presence(activity=game)
   
-  event.set()
-  
   await client.close()
 
 @client.command(name = "block", aliases = ['ab', 'todays-block', 'a/b', 'aorbday', '🆎'], help = "Adds a reaction based on what day it is")
@@ -161,67 +146,58 @@ def get_current_bell(time = None, block_day = None):
   return client.previous_bell
 
 async def bell_ringer():
-  time = get_local_datetime()
-  block_day = get_block_day(time)
-  current_bell = get_current_bell(time, block_day)
-  
-  if current_bell == None:
-    # print("Current bell is none")
-    return
+  # time = get_local_datetime()
+  # print(f"In bell ringer {time}")
+  await client.wait_until_ready()
+  while True:
+    time = get_local_datetime()
+    # print(f"In bell ringer {time}")
+    block_day = get_block_day(time)
+    current_bell = get_current_bell(time, block_day)
     
-  period = current_bell['period']
-  if block_day == "B":
-    if type(current_bell['period']) == int:
-      period += 4
-  
-  if client.previous_bell == current_bell:
-    # print("Previous bell and Current bell are the same")
-    return
-  # elif client.previous_bell == None:
-    # print("Previous bell is none")
-  client.previous_bell = current_bell
-  if current_bell['message'] == "default":
-    if current_bell['type'] == "passing":
-      await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} starts in 5 minutes! Be sure to join your next zoom call!")
-    elif current_bell['type'] == "tardy":
-      await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} has now officially started! Make sure you're in your zoom call!")
-    elif current_bell['type'] == "starting":
-      await send_ping(f"""Good morning everyone! Schools starts in 5 minutes, so be sure to join your first zoom.
+    if current_bell == None:
+      # print("Current bell is none")
+      await sleep(10)
+      continue
+      
+    period = current_bell['period']
+    if block_day == "B":
+      if type(current_bell['period']) == int:
+        period += 4
+    
+    if client.previous_bell == current_bell:
+      # print("Previous bell and Current bell are the same")
+      await sleep(10)
+      continue
+    # elif client.previous_bell == None:
+      # print("Previous bell is none")
+    client.previous_bell = current_bell
+    if current_bell['message'] == "default":
+      if current_bell['type'] == "passing":
+        await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} starts in 5 minutes! Be sure to join your next zoom call!")
+      elif current_bell['type'] == "tardy":
+        await send_ping(f"period {period}{'🅰️' if block_day == 'A' else '🅱️'} has now officially started! Make sure you're in your zoom call!")
+      elif current_bell['type'] == "starting":
+        await send_ping(f"""Good morning everyone! School starts in 5 minutes, so be sure to join your first zoom.
 
-Additional Info:
-Today is {time.month}/{time.day}/{time.year}
-It's a{'n' if block_day == 'A' else ''} {'🅰️' if block_day == 'A' else '🅱️'} day""")
-  else:
-    await send_ping(f"{current_bell['message']}")
+  Additional Info:
+  Today is {time.month}/{time.day}/{time.year}
+  It's a{'n' if block_day == 'A' else ''} {'🅰️' if block_day == 'A' else '🅱️'} day""")
+    else:
+      await send_ping(f"{current_bell['message']}")
+    
+    await sleep(10)
 
 async def send_ping(message):
   ping_channel = client.get_channel(client.ping_channel)
   print(f"{client.message_starter} : {message}")
   await ping_channel.send(f"{client.message_starter} : {message}")
 
-@client.command(name = "bob")
-async def bob(ctx):
-  # await client.log_channel.send(f"<@&{config['Pinged Role ID']}>")
-  await client.log_channel.send(':a: :b: :ab: :bell:')
-  time.sleep(5)
-  await client.log_channel.send(f"<@&{config['Pinged Role ID']}> :one:")
 
-event = threading.Event()
-
-bell_ringer_thread = ThreadJob(bell_ringer,event,5)
-bell_ringer_thread.start()
+client.loop.create_task(bell_ringer())
 
 from importlib import import_module
 token_module = import_module(config['Bot Token File'][:-3])
 token = getattr(token_module, config['Bot Token Variable Name'])
 
 client.run(token, bot=True, reconnect=True)
-
-# for i in range(5): 
-#   i += 8
-#   for j in range(31):
-#     j += 1
-#     if not (i == 9 and j > 30) and not (i == 11 and j > 30):
-#       dt = get_local_datetime()
-#       dt = datetime.datetime(dt.year, i, j, dt.hour, dt.minute, dt.second, dt.microsecond)
-#       print(f"Month {i} \tDay {j}\t\tBlock {get_block_day(dt)}")
